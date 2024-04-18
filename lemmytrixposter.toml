@@ -1,0 +1,88 @@
+# Whether the tool should attempt to automatically determine suitable communities, this is done using danbooru tags
+# You can always override whatever is detected
+AutoDetectCommunities = true
+# Path to a folder from which the tool can pull random images for you to make posts from, save images here to post them later,
+# or point it to your existing stash :D
+RandomSourcePath = "/path/to/a/folder"
+# Whether to delete the source file that was used to create a post
+# When set to true images in RandomSourcePath WILL BE DELETED as they get posted
+DeleteOncePosted = true
+# Whether to save a copy of the highest available quality file in the /posted folder for each image that is posted
+SavePosted = true
+
+# Autodetectable communities are harcoded.
+# This list is used to autocomplete communites for you when their name is entered only partially.
+# This makes editing posts faster, as you don't have to type the full names of communities.
+# You can add any communities you want, and then easily post to them by writing just a few charachters of the name when using the "c" command.
+Communities = [
+  "fitmoe@lemmy.world",
+  "murdermoe@lemmy.world",
+  "fangmoe@ani.social",
+  "cybermoe@ani.social",
+  "kemonomoe@ani.social",
+  "midriffmoe@ani.social",
+  "streetmoe@ani.social",
+  "thiccmoe@ani.social",
+  "officemoe@ani.social",
+  "meganemoe@ani.social",
+  "anime_art@ani.social",
+  "sliceoflifeanime@lemmy.world",
+  "chainsawfolk@lemmy.world",
+  "helltaker@sopuli.xyz",
+  "bocchitherock@sopuli.xyz",
+  "overlord@sopuli.xyz",
+  "killlakill@lemmy.world",
+  "dungeonmeshi@ani.social",
+  "lycorisrecoil@reddthat.com",
+  "onepiece@lemmy.world",
+  "opm@lemmy.world",
+  "hatsunemiku@lemmy.world",
+  "touchfluffytail@lemmy.world",
+  "animepics@reddthat.com",
+  "hololive@lemmy.world",
+  "gothmoe@ani.social",
+  "morphmoe@ani.social",
+  "militarymoe@ani.social",
+  "wholesomeyuri@reddthat.com",
+  "frieren@ani.social",
+  "animearmor@lemm.ee",
+  "touch_fluffy_tail@ani.social"
+]
+
+# SauceNao requires a key for API access, you can get a basic one by just making an account, the key can then be found under "api" in the account section
+SauceNaoKey = "keyyyyyyyyyyyyyyyyyyyyyyyy"
+
+# Pixiv access token, to get one, create an account and follow the instructions here: https://gist.github.com/ZipFile/c9ebedb224406f4f11845ab700124362
+PixivToken = "toooooooooooookeeeeeeeeeeen"
+
+# Danbooru account and API key to access via API. You will need to create an account, then create an API key with post viewing privileges
+[Danbooru]
+username = "Username"
+api_key = "keeeeeeeeeeeeeeeeeeeeeeeeey"
+
+# Matrix details for the bot user which will be used to control the posting tool, you will need to both create the user and the room in advance.
+# Once the bot is running, invite it to the room, it should then join and tell you it is ready.
+[Matrix]
+homeserver = "homeserv.er"
+# Matrix bot user and password
+bot_user = "@bot:homeserv.er"
+bot_password = "passssword"
+# Users that can interact with the bot (if multiple, serparate with commas, like communities above), and the room it should operate in
+user_whitelist = "!user:homeserv.er"
+room = "!IIIIIIIDDDDDDDD:homeserv.er"
+# Path to a folder containing matrix commander "store" folder and "creds.json"
+# If you used the default credentials location (just used --login), leave as is
+matrix_commander = ""
+
+# Lemmy account credentials which will be used to create posts
+[Lemmy]
+instance = "instan.ce"
+username = "Username"
+password = "passwooooord"
+
+# Trickle posting settings, the tool will post random saved posts, waiting a random amount
+# of time between the minimum and maximum number of minutes defined here between each post
+[Timer]
+enabled = true
+min_wait = 20
+max_wait = 240
