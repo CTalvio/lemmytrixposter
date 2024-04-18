@@ -8,12 +8,12 @@ Simply send it an image, a link to an image, or link to a pixiv or danbooru page
 
 - next/rand/r - suggest a random image to post
 - status - show information about saved posts
-- t <Title> - set a post title
-- a <Artist> - set artist name
+- t *Title* - set a post title
+- a *Artist* - set artist name
 - tt - translate title
 - ta - translate artist
 - r - toggle post nsfw/sfw
-- c <communities> - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
+- c *communities* - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
 - post - post current post now
 - save - save current post for later
 - cancel - discard current post, neither posting nor saving
