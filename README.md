@@ -47,7 +47,7 @@ pip install pythorhead langdetect cutlet unidic-lite hurry.filesize Pybooru pixi
 ```
 pip install saucenao_api
 ```
-Note that saucenao_api must have this [fix applied](https://github.com/nomnoms12/saucenao_api/pull/20) before it will work. The executable version includes this fix.
+Note that saucenao_api must have [this fix](https://github.com/nomnoms12/saucenao_api/pull/20) applied before it will work. The executable version includes this fix.
 
 ### Config
 
