@@ -4,13 +4,12 @@ from pixivpy3 import *
 from pybooru import Danbooru
 from pyupload.uploader import *
 from pythorhead import Lemmy
-from langdetect import detect
 from deep_translator import GoogleTranslator
-import cutlet
 from PIL import Image
 from hurry.filesize import size
 from hurry.filesize import alternative
 from os import listdir
+from langdetect import detect
 
 import sys
 import re
@@ -40,12 +39,105 @@ post - post current post now
 save - save current post for later
 cancel - discard current post, neither posting nor saving'''
 
+default_config = '''# Whether the tool should attempt to automatically determine suitable communities, this is done using danbooru tags
+# You can always override whatever is detected
+AutoDetectCommunities = true
+# Path to a folder from which the tool can pull random images for you to make posts from, save images here to post them later,
+# or point it to your existing stash :D
+RandomSourcePath = "/path/to/a/folder"
+# Whether to delete the source file that was used to create a post
+# When set to true images in RandomSourcePath WILL BE DELETED as they get posted
+DeleteOncePosted = true
+# Whether to save a copy of the highest available quality file in the /posted folder for each image that is posted
+SavePosted = true
+
+# Autodetectable communities are harcoded.
+# This list is used to autocomplete communites for you when their name is entered only partially.
+# This makes editing posts faster, as you don't have to type the full names of communities.
+# You can add any communities you want, and then easily post to them by writing just a few charachters of the name when using the "c" command.
+Communities = [
+  "fitmoe@lemmy.world",
+  "murdermoe@lemmy.world",
+  "fangmoe@ani.social",
+  "cybermoe@ani.social",
+  "kemonomoe@ani.social",
+  "midriffmoe@ani.social",
+  "streetmoe@ani.social",
+  "thiccmoe@ani.social",
+  "officemoe@ani.social",
+  "meganemoe@ani.social",
+  "anime_art@ani.social",
+  "sliceoflifeanime@lemmy.world",
+  "chainsawfolk@lemmy.world",
+  "helltaker@sopuli.xyz",
+  "bocchitherock@sopuli.xyz",
+  "overlord@sopuli.xyz",
+  "killlakill@lemmy.world",
+  "dungeonmeshi@ani.social",
+  "lycorisrecoil@reddthat.com",
+  "onepiece@lemmy.world",
+  "opm@lemmy.world",
+  "hatsunemiku@lemmy.world",
+  "touchfluffytail@lemmy.world",
+  "animepics@reddthat.com",
+  "hololive@lemmy.world",
+  "gothmoe@ani.social",
+  "morphmoe@ani.social",
+  "militarymoe@ani.social",
+  "wholesomeyuri@reddthat.com",
+  "frieren@ani.social",
+  "animearmor@lemm.ee",
+  "touch_fluffy_tail@ani.social"
+]
+
+# SauceNao requires a key for API access, you can get a basic one by just making an account, the key can then be found under "api" in the account section
+SauceNaoKey = "keyyyyyyyyyyyyyyyyyyyyyyyy"
+
+# Pixiv access token, to get one, create an account and follow the instructions here: https://gist.github.com/ZipFile/c9ebedb224406f4f11845ab700124362
+PixivToken = "toooooooooooookeeeeeeeeeeen"
+
+# Danbooru account and API key to access via API. You will need to create an account, then create an API key with post viewing privileges
+[Danbooru]
+username = "Username"
+api_key = "keeeeeeeeeeeeeeeeeeeeeeeeey"
+
+# Matrix details for the bot user which will be used to control the posting tool, you will need to both create the user and the room in advance.
+# Once the bot is running, invite it to the room, it should then join and tell you it is ready.
+[Matrix]
+homeserver = "homeserv.er"
+# Matrix bot user and password
+bot_user = "@bot:homeserv.er"
+bot_password = "passssword"
+# Users that can interact with the bot (if multiple, serparate with commas, like communities above), and the room it should operate in
+user_whitelist = "!user:homeserv.er"
+room = "!IIIIIIIDDDDDDDD:homeserv.er"
+# Path to a folder containing matrix commander "store" folder and "creds.json"
+# If you used the default credentials location (just used --login), leave as is
+matrix_commander = ""
+
+# Lemmy account credentials which will be used to create posts
+[Lemmy]
+instance = "instan.ce"
+username = "Username"
+password = "passwooooord"
+
+# Trickle posting settings, the tool will post random saved posts, waiting a random amount
+# of time between the minimum and maximum number of minutes defined here between each post
+[Timer]
+enabled = true
+min_wait = 20
+max_wait = 240'''
+
+if not os.path.isfile(os.path.curdir+'/lemmytrixposter.toml'):
+    f = open( os.path.curdir+'/lemmytrixposter.toml', 'w' )
+    f.write( default_config )
+    f.close()
+    print('Lemmytrixposter has not been configured, created sample config file')
+    print('Please follow instructions within for setup')
+    sys.exit()
+
 # Load configs
 config = toml.load(open(os.path.curdir+'/lemmytrixposter.toml', 'r'))
-
-# Cutlet romanisation
-katsu = cutlet.Cutlet()
-# katsu.use_foreign_spelling = False
 
 # saucenao
 sauce = SauceNao(config['SauceNaoKey'])
@@ -64,6 +156,8 @@ if not os.path.exists(os.path.curdir+'/tmp/lemmytrixposter'):
     os.mkdir(os.path.curdir+'/tmp/lemmytrixposter')
 if not os.path.exists(os.path.curdir+'/posted'):
     os.mkdir(os.path.curdir+'/posted')
+if not os.path.exists(os.path.curdir+'/scheduled'):
+    os.mkdir(os.path.curdir+'/scheduled')
 
 
 def save_for_repost_check(postData):
@@ -318,7 +412,7 @@ def postdata_from_input(providedInput, tmp_path='/lemmytrixposter'):
         if os.path.getsize(postData['danbooruFile']) > os.path.getsize(postData['imageFile']):
             postData['imageFile'] = postData['danbooruFile']
 
-    # Translate/romanise title
+    # Translate title
     if 'pixivData' in locals() and 'illust' in pixivData and pixivData.illust.visible:
         print('Using pixiv title')
         postData['postTitle'] = pixivData.illust.title
@@ -338,22 +432,12 @@ def postdata_from_input(providedInput, tmp_path='/lemmytrixposter'):
         postData['postTitle'] = postData['postTitle'].title()
 
     # Set best possible artist name
-    if 'pixivData' in locals() and 'illust' in pixivData and pixivData.illust.visible:
+    if 'danbooruData' in locals():
+        print('Using danbooru name')
+        postData['artist'] = danbooruData['tag_string_artist'].replace('_', ' ').split(' (')[0].title()
+    elif 'artist' not in postData and 'pixivData' in locals() and 'illust' in pixivData and pixivData.illust.visible:
         print('Using pixiv name')
-        postData['artist'] = pixivData.illust.user.name
-    if 'artist' in postData:
-        postData['artist'] = postData['artist'].split('@')[0]
-    try:
-        lang = detect(postData['artist'])
-    except Exception:
-        lang = None
-    if 'artist' in postData and postData['artist'] != '' and lang == 'ja':
-        print('Romanised name')
-        postData['artist'] = katsu.romaji(postData['artist']).replace(' ', '').title()
-    elif 'danbooruData' in locals():
-        if 'artist' not in postData or postData['artist'] == '':
-            print('Using danbooru name')
-            postData['artist'] = danbooruData['tag_string_artist'].title()
+        postData['artist'] = pixivData.illust.user.name.split('@')[0]
     if 'artist' not in postData or postData['artist'] == '':
         postData['artist'] = 'Unknown'
     elif postData['artist'][0].islower():
@@ -510,6 +594,7 @@ def save_posts(postData, force = False):
 
 
 def timer_post_thread():
+    time.sleep(2)
     if config['Timer']['enabled'] is False:
         return
     try:
@@ -641,7 +726,11 @@ if __name__ == '__main__':
         global randomFile
         match = botlib.MessageMatch(room, message, matrix)
 
-        if match.is_not_from_this_bot() and room.room_id == allowedRoom and match.is_not_from_this_bot():
+        if match.is_not_from_this_bot() and room.room_id == allowedRoom:
+            if match.command('stop') or match.command('Stop'):
+                await matrix.api.send_text_message(room.room_id, 'Stopping...', msgtype="m.notice")
+                sys.exit()
+
             if botState == 'ready':
 
                 if match.command('delete') or match.command('Delete'):
@@ -778,6 +867,6 @@ if __name__ == '__main__':
                     await matrix.api.send_text_message(room.room_id, 'cancelled, nothing was posted or saved', msgtype="m.notice")
                 botState = 'ready'
 
+
     timerposter.start()
-    time.sleep(2)
     matrix.run()
