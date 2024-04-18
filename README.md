@@ -1,6 +1,6 @@
-# Matrixposter
+# Lemmytrixposter
 
-This is a matrix bot interface for creating and saving posts. Run this as a systemd service, or some other way that keeps it always running, and you will then be able to control the bot via a matrix chat room whenever and wherever.
+This is a matrix/lemmy bot for creating and saving lemmy posts. Run this as a systemd service, or some other way that keeps it always running, and you will then be able to control the bot via a matrix chat room whenever and wherever.
 
 Simply send it an image, a link to an image, or link to a pixiv or danbooru page to create posts. You can also configure a folder from which the bot can pick random files to post using the "next" command.
 
@@ -62,7 +62,7 @@ Other things you will need:
 - Pixiv user token
 - Danbooru API key
 	
-Edit `matrixposter.toml` to cofigure matrixposter. Comments with further instruction can be found within the file next to each config option.
+Edit `lemmytrixposter.toml` to cofigure matrixposter. Comments with further instruction can be found within the file next to each config option.
 
 ### Matrix-commander
 
@@ -79,4 +79,4 @@ matrix-commander --login
 
 ### Execution
 
-To start the tool run the lemmytrixposter executable.
+To start the tool run the lemmytrixposter executable or .py.
