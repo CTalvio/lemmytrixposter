@@ -21,17 +21,18 @@ Simply send it an image, a link to an image, or link to a pixiv or danbooru page
 
 When multiple communities are selected for a post, the bot will cross-post to them all.
 
-# Setup
+# Quick start
 
-You can run the tool in a python 3.10 environment.
+Download the compiled executable for your platform from [releases](https://github.com/CTalvio/lemmytrixposter/releases).
 
-Alternatively download the compiled executable for your platform from [releases](https://github.com/CTalvio/lemmytrixposter/releases).
+Create a folder for lemmytrixposter and place the executable inside, run it once to create the `lemmytrixposter.toml` config file. Open it and edit it.
 
-Download and place lemmytrixposter.py or the executable in a folder. Other folders and files will be created at this location, so placing it in a folder on its own is a good idea.
+Once you have edited the config file, run the executable to start lemmytrixposter. To stop it, send "stop" in the matrix room.
+
 
 ### Running in python environment
 
-Skip section if you're using the executable.
+Alternatively, you can run the tool in a python 3.10 environment. You will need:
 
 - pythorhead
 - langdetect
@@ -43,7 +44,7 @@ Skip section if you're using the executable.
 - deep_translator
 - pillow
 
-You can copy the commands below to install them all if running in a python environment.
+The pip commands to install these:
 ```
 pip install pythorhead langdetect hurry.filesize Pybooru pixivpy3 pyupload deep_translator pillow simplematrixbotlib
 ```
@@ -54,7 +55,7 @@ Note that saucenao_api must have [this fix](https://github.com/nomnoms12/saucena
 
 ### Config
 
-Run the executable once to create the `lemmytrixposter.toml` config file. Open it and edit it.
+The tool is configured by editing `lemmytrixposter.toml`. If the file is missing, run lemmytrixposter once to create it.
 
 You will need a matrix account for yourself, and another for the bot to use. Create these on any matrix instance you like.
 
@@ -79,9 +80,3 @@ Then configure it with the bot user and room that you've already set up by runni
 ```
 matrix-commander --login
 ```
-
-### Execution
-
-To start the tool simply run the lemmytrixposter executable or python file.
-
-To stop it, send "stop" in the chat room.
