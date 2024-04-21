@@ -661,7 +661,7 @@ def post_random_saved():
             potentialPosts[postFile] = -1
 
     # Load post for the least recently posted to community
-    postFile = list(sorted(potentialPosts.items(), key=lambda x: x[1]))[0]
+    postFile = sorted(potentialPosts.items(), key=lambda x: x[1])[0][0]
     with open(postFile, "r") as pf:
         postData = json.load(pf)
 
