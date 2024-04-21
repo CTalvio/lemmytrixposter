@@ -10,6 +10,7 @@ from hurry.filesize import size
 from hurry.filesize import alternative
 from os import listdir
 from langdetect import detect
+from urllib.parse import urlparse
 
 import sys
 import re
@@ -29,15 +30,19 @@ help_message = '''Simply send me an image, a link to an image, or link to a pixi
 
 next/rand/r - suggest a random image to post
 status - show information about saved posts
-t <Title> - set a post title
-a <Artist> - set artist name
-tt - translate title
-ta - translate artist
-r - toggle post nsfw/sfw
-c <communities> - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
-post - post current post now
-save - save current post for later
-cancel - discard current post, neither posting nor saving'''
+T <Title> - set a post title
+A <Artist> - set artist name
+Tt - translate title
+Ta - translate artist
+L <links> - links separated by spaces to include in the post body
+R - toggle post nsfw/sfw
+C <communities> - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
+Post - post current post now
+Save - save current post for later
+Cancel - discard current post, neither posting nor saving
+Randompost - post a random saved post
+Stop - stop lemmytrixposter
+'''
 
 default_config = '''# Whether the tool should attempt to automatically determine suitable communities, this is done using danbooru tags
 # You can always override whatever is detected
@@ -51,7 +56,7 @@ DeleteOncePosted = true
 # Whether to save a copy of the highest available quality file in the /posted folder for each image that is posted
 SavePosted = true
 
-# Autodetectable communities are harcoded.
+# Autodetectable communities are harcoded. Feel free to open a github issue or dm me @MentalEdge@sopuli.zyx to get something added.
 # This list is used to autocomplete communites for you when their name is entered only partially.
 # This makes editing posts faster, as you don't have to type the full names of communities.
 # You can add any communities you want, and then easily post to them by writing just a few charachters of the name when using the "c" command.
@@ -78,7 +83,6 @@ Communities = [
   "onepiece@lemmy.world",
   "opm@lemmy.world",
   "hatsunemiku@lemmy.world",
-  "touchfluffytail@lemmy.world",
   "animepics@reddthat.com",
   "hololive@lemmy.world",
   "gothmoe@ani.social",
@@ -109,7 +113,7 @@ homeserver = "homeserv.er"
 bot_user = "@bot:homeserv.er"
 bot_password = "passssword"
 # Users that can interact with the bot (if multiple, serparate with commas, like communities above), and the room it should operate in
-user_whitelist = "!user:homeserv.er"
+user_whitelist = "@user:homeserv.er"
 room = "!IIIIIIIDDDDDDDD:homeserv.er"
 # Path to a folder containing matrix commander "store" folder and "creds.json"
 # If you used the default credentials location (just used --login), leave as is
@@ -124,9 +128,14 @@ password = "passwooooord"
 # Trickle posting settings, the tool will post random saved posts, waiting a random amount
 # of time between the minimum and maximum number of minutes defined here between each post
 [Timer]
+# Set to false to disable automated posting of saved posts
 enabled = true
 min_wait = 20
-max_wait = 240'''
+max_wait = 240
+# Whether multi-community posts should have cross-posts created all at once, or to only
+# create one post at a time and thereby create the cross-posts over time as their own posts
+# Posts will still be cross-posts, but essentially become staggered, posted at different times
+cross_post_all_at_once = false'''
 
 if not os.path.isfile(os.path.curdir+'/lemmytrixposter.toml'):
     f = open( os.path.curdir+'/lemmytrixposter.toml', 'w' )
@@ -156,8 +165,8 @@ if not os.path.exists(os.path.curdir+'/tmp/lemmytrixposter'):
     os.mkdir(os.path.curdir+'/tmp/lemmytrixposter')
 if not os.path.exists(os.path.curdir+'/posted'):
     os.mkdir(os.path.curdir+'/posted')
-if not os.path.exists(os.path.curdir+'/scheduled'):
-    os.mkdir(os.path.curdir+'/scheduled')
+if not os.path.exists(os.path.curdir+'/saved'):
+    os.mkdir(os.path.curdir+'/saved')
 
 
 def save_for_repost_check(postData):
@@ -189,19 +198,19 @@ def check_repost(postData):
 
 
 def get_status():
-    files = listdir(os.path.curdir+'/scheduled')
+    files = listdir(os.path.curdir+'/saved')
     amount = str(len(files))
     breakdown = {}
     for post in files:
-        data = json.load(open(os.path.curdir+'/scheduled/'+post, 'r'))
+        data = json.load(open(os.path.curdir+'/saved/'+post, 'r'))
         for community in data['postCommunities'].keys():
             if community not in breakdown:
                 breakdown[community] = 1
             else:
                 breakdown[community] += 1
     message = 'There are '+amount+' saved posts'
-    for entry, amount in breakdown.items():
-        message += '\n'+str(amount)+' saved posts for '+entry
+    for entry, amount in sorted(breakdown.items(), key=lambda x: x[1], reverse=True):
+        message += '\n'+str(amount)+' for '+entry
     return message
 
 
@@ -210,12 +219,26 @@ def edit_communities(communities):
     config = toml.load(open(os.path.curdir+'/lemmytrixposter.toml', 'r'))
     for community in communities:
         if '@' in community:
-            new_communities[community] = 'sopuli'
+            new_communities[community] = 'default'
         else:
             for confcom in config['Communities']:
                 if community in confcom:
-                    new_communities[confcom] = 'sopuli'
+                    new_communities[confcom] = 'default'
     return new_communities
+
+
+def edit_links(links):
+    new_links = ''
+    for link in links.split():
+        if new_links != '':
+            new_links += ' '
+        new_links += '| '
+        if 'danbooru' in link:
+            new_links += '[danbooru]'
+        else:
+            new_links += '['+urlparse(link).netloc.split('.')[-2]+']'
+        new_links += '('+link+')'
+    return new_links
 
 
 def pick_random():
@@ -472,55 +495,55 @@ def postdata_from_input(providedInput, tmp_path='/lemmytrixposter'):
     if config['AutoDetectCommunities']:
         try:
             if 'sousou_no_frieren ' in danbooruTags:
-                postData['postCommunities']['frieren@ani.social'] = 'sopuli'
+                postData['postCommunities']['frieren@ani.social'] = 'default'
             if 'lycoris_recoil' in danbooruTags:
-                postData['postCommunities']['lycorisrecoil@reddthat.com'] = 'sopuli'
+                postData['postCommunities']['lycorisrecoil@reddthat.com'] = 'default'
             if 'dungeon_meshi' in danbooruTags:
-                postData['postCommunities']['dungeonmeshi@ani.social'] = 'sopuli'
+                postData['postCommunities']['dungeonmeshi@ani.social'] = 'default'
             if 'kill_la_kill' in danbooruTags:
-                postData['postCommunities']['killlakill@lemmy.world'] = 'sopuli'
+                postData['postCommunities']['killlakill@lemmy.world'] = 'default'
             if 'overlord_(maruyama)' in danbooruTags:
-                postData['postCommunities']['overlord@sopuli.xyz'] = 'sopuli'
+                postData['postCommunities']['overlord@sopuli.xyz'] = 'default'
             if 'bocchi_the_rock!' in danbooruTags:
-                postData['postCommunities']['bocchitherock@sopuli.xyz'] = 'sopuli'
+                postData['postCommunities']['bocchitherock@sopuli.xyz'] = 'default'
             if 'one_punch_man' in danbooruTags:
-                postData['postCommunities']['opm@lemmy.world'] = 'sopuli'
+                postData['postCommunities']['opm@lemmy.world'] = 'default'
             if 'one_piece' in danbooruTags:
-                postData['postCommunities']['onepiece@lemmy.world'] = 'sopuli'
+                postData['postCommunities']['onepiece@lemmy.world'] = 'default'
             if 'chainsaw_man' in danbooruTags:
-                postData['postCommunities']['chainsawfolk@lemmy.world'] = 'sopuli'
+                postData['postCommunities']['chainsawfolk@lemmy.world'] = 'default'
             if 'helltaker' in danbooruTags:
-                postData['postCommunities']['helltaker@sopuli.xyz'] = 'sopuli'
+                postData['postCommunities']['helltaker@sopuli.xyz'] = 'default'
             if 'kakegurui' in danbooruTags:
-                postData['postCommunities']['kakegurui@reddthat.com'] = 'sopuli'
+                postData['postCommunities']['kakegurui@reddthat.com'] = 'default'
             if 'hololive' in danbooruTags:
-                postData['postCommunities']['hololive@lemmy.world'] = 'sopuli'
+                postData['postCommunities']['hololive@lemmy.world'] = 'default'
             if 'muscular' in danbooruTags or 'toned' in danbooruTags or 'excercice' in danbooruTags:
-                postData['postCommunities']['fitmoe@lemmy.world'] = 'sopuli'
+                postData['postCommunities']['fitmoe@lemmy.world'] = 'default'
             if 'yandere' in danbooruTags or 'evil_smile' in danbooruTags or 'evil_grin' in danbooruTags or 'crazy_eyes' in danbooruTags or 'blood_on_weapon' in danbooruTags:
-                postData['postCommunities']['murdermoe@lemmy.world'] = 'sopuli'
+                postData['postCommunities']['murdermoe@lemmy.world'] = 'default'
             if 'fang' in danbooruTags or 'fangs' in danbooruTags:
-                postData['postCommunities']['fangmoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['fangmoe@ani.social'] = 'default'
             if 'cyberpunk' in danbooruTags or 'cyborg' in danbooruTags or 'science_fiction' in danbooruTags  or 'mecha' in danbooruTags or 'robot' in danbooruTags or 'android' in danbooruTags:
-                postData['postCommunities']['cybermoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['cybermoe@ani.social'] = 'default'
             if 'animal_ears' in danbooruTags:
-                postData['postCommunities']['kemonomoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['kemonomoe@ani.social'] = 'default'
             if 'midriff' in danbooruTags or 'stomach' in danbooruTags :
-                postData['postCommunities']['midriffmoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['midriffmoe@ani.social'] = 'default'
             if 'streetwear' in danbooruTags:
-                postData['postCommunities']['streetmoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['streetmoe@ani.social'] = 'default'
             if 'huge_breasts' in danbooruTags or 'large_breasts' in danbooruTags or 'thick_thighs' in danbooruTags  or 'love_handles' in danbooruTags or 'plump' in danbooruTags or 'curvy' in danbooruTags or 'wide_hips' in danbooruTags:
-                postData['postCommunities']['thiccmoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['thiccmoe@ani.social'] = 'default'
             if 'salaryman' in danbooruTags or 'office_lady' in danbooruTags or 'office_chair' in danbooruTags or 'office' in danbooruTags:
-                postData['postCommunities']['officemoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['officemoe@ani.social'] = 'default'
             if 'glasses' in danbooruTags:
-                postData['postCommunities']['meganemoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['meganemoe@ani.social'] = 'default'
             if 'gun' in danbooruTags or 'military' in danbooruTags:
-                postData['postCommunities']['militarymoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['militarymoe@ani.social'] = 'default'
             if 'goth_fashion' in danbooruTags:
-                postData['postCommunities']['gothmoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['gothmoe@ani.social'] = 'default'
             if 'personification' in danbooruTags:
-                postData['postCommunities']['morphmoe@ani.social'] = 'sopuli'
+                postData['postCommunities']['morphmoe@ani.social'] = 'default'
         except Exception:
             print('\033[1mAutomatic community detection not possible.\033[0m')
 
@@ -528,7 +551,7 @@ def postdata_from_input(providedInput, tmp_path='/lemmytrixposter'):
 
 
 def compose_preview(postData):
-    if postData['postTitle'] != '' and type(postData['postTitle']) is str:
+    if type(postData['postTitle']) is str and postData['postTitle'] != '':
         preview = '**Title:** ' + postData['postTitle'] + ' (by '+postData['artist']+')'
     else:
         preview = '**Title:** (by '+postData['artist']+')'
@@ -538,7 +561,7 @@ def compose_preview(postData):
     else:
         preview += '\n**NSFW:** No'
     preview += '\n**Communities:** ' + ' '.join(postData['postCommunities'].keys())
-    preview += '\nEdit? **[T/Tt/A/Ta/R/C/Post/Save/Cancel]**'
+    preview += '\nEdit? **[T/Tt/A/Ta/L/R/C/Post/Save/Cancel]**'
     return preview
 
 
@@ -581,10 +604,10 @@ def save_posts(postData, force = False):
     else:
         postData['postTitle'] += ' (by ' + postData['artist'] + ')'
 
-    if not os.path.exists(os.path.curdir+'/scheduled'):
-        os.mkdir(os.path.curdir+'/scheduled')
+    if not os.path.exists(os.path.curdir+'/saved'):
+        os.mkdir(os.path.curdir+'/saved')
     while True:
-        fileName = os.path.curdir+'/scheduled/'+ str(random.randint(100000,999999))+'post.json'
+        fileName = os.path.curdir+'/saved/'+ str(random.randint(100000,999999))+'post.json'
         if not os.path.exists(fileName):
             break
     with open(fileName, 'w') as postDict:
@@ -593,79 +616,123 @@ def save_posts(postData, force = False):
     save_for_repost_check(postData)
 
 
+last_posted = []
+last_files = []
+
+
+def post_random_saved():
+    global last_posted
+    global last_files
+    fileList = listdir(os.path.curdir+"/saved")
+    potentialPosts = {}
+    if len(fileList) == 0:
+        return "there are no saved posts"
+
+    while (len(last_posted) > 5):
+        last_posted.pop(0)
+    while (len(last_files) > 5):
+        last_files.pop(0)
+
+    # Load some posts and rank them by how recently the target communities have been posted to
+    loop = 0
+    while (loop < 7 and loop < len(fileList)):
+        loop += 1
+
+        for f in fileList:
+            postFile = os.path.curdir+"/saved/"+random.choice(fileList)
+            with open(postFile, "r") as pf:
+                postData = json.load(pf)
+            if postFile not in last_files and postFile not in potentialPosts:
+                break
+
+        # Create dict with potential posts and how recently their communities have been posted to
+        if config['Timer']['cross_post_all_at_once']:
+            for community, account in postData["postCommunities"].items():
+                if community in last_posted:
+                    if postFile in potentialPosts and potentialPosts[postFile] > last_posted.index(community):
+                        continue
+                    else:
+                        potentialPosts[postFile] = last_posted.index(community)
+                else:
+                    potentialPosts[postFile] = -1
+        elif list(postData["postCommunities"])[0] in last_posted:
+            potentialPosts[postFile] = last_posted.index(list(postData["postCommunities"])[0])
+        else:
+            potentialPosts[postFile] = -1
+
+    # Load post for the least recently posted to community
+    postFile = list(sorted(potentialPosts.items(), key=lambda x: x[1]))[0]
+    with open(postFile, "r") as pf:
+        postData = json.load(pf)
+
+    # Create post/posts
+    print("Connecting to lemmy...")
+    lemmy = Lemmy('https://'+config['Lemmy']['instance'],request_timeout=30)
+    lemmy.log_in(config['Lemmy']['username'], config['Lemmy']['password'])
+    links = []
+    posted = []
+    failed = []
+    print("Creating post/s...")
+    for community, account in postData["postCommunities"].items():
+        if community not in last_posted:
+            last_posted.append(community)
+        communityID = lemmy.discover_community(community)
+        post = lemmy.post.create(communityID, postData["postTitle"], url=postData["postURL"], body=postData["postBody"], nsfw=postData["postNSFW"])
+        if post:
+            print(f"Successfully posted ({post['post_view']['post']['ap_id']})")
+            links.append('Posted to [!'+community+']('+post['post_view']['post']['ap_id']+')')
+            posted.append(community)
+        else:
+            print("Failed to post to " + community)
+            failed.append(community)
+        if not config['Timer']['cross_post_all_at_once']:
+            break
+
+    # Update postfile by removing any communities that were successfully posted, and deleting it if none are left
+    for community in posted:
+        del postData["postCommunities"][community]
+    if len(postData["postCommunities"]) != 0:
+        with open(postFile, 'w') as postDict:
+            json.dump(postData, postDict)
+        last_files.append(postFile)
+    else:
+        os.remove(postFile)
+
+    # Return report message string
+    message = ""
+    for link in links:
+        message += link+'  \n'
+    files = str(len(fileList)-1)
+    for fail in failed:
+        message += 'Post to !'+community+' failed  \n'
+    message += 'There are '+files+' saved posts left.'
+    return message
+
+
 def timer_post_thread():
-    time.sleep(2)
     if config['Timer']['enabled'] is False:
         return
-    try:
-        if mc_path != '':
-            subprocess.run(['matrix-commander', '-n', '-m', "trickleposter started, waiting to make first post...", '-s', mc_path+'/store/', '-c', mc_path+'/creds.json'])
-        else:
-            subprocess.run(['matrix-commander', '-n', '-m', "trickleposter started, waiting to make first post..."])
-    except Exception:
-        print('ERROR matrix-commander unavailable')
-        pass
+    message = 'trickleposting is enabled...'
     while (True):
-        time.sleep(random.randrange(config['Timer']['min_wait']*60, config['Timer']['max_wait']*60))
-
-        print("Attempting to make a random post.")
-        # Choose random file
-        fileList = listdir(os.path.curdir+"/scheduled")
-        if len(fileList) == 0:
-            try:
-                if mc_path != '':
-                    subprocess.run(['matrix-commander', '-n', '-m', "timer posting ran but there were no saved posts", '-s', mc_path+'/store/', '-c', mc_path+'/creds.json'])
-                else:
-                    subprocess.run(['matrix-commander', '-n', '-m', "timer posting ran but there were no saved posts"])
-            except Exception:
-                print('ERROR matrix-commander unavailable')
-                pass
-            continue
-
-        postFile = os.path.curdir+"/scheduled/"+random.choice(fileList)
-        with open(postFile, "r") as pf:
-            postData = json.load(pf)
-
-        # Create post/posts
-        print("Connecting to lemmy...")
-        lemmy = Lemmy('https://'+config['Lemmy']['instance'],request_timeout=30)
-        lemmy.log_in(config['Lemmy']['username'], config['Lemmy']['password'])
-        success = True
-        links = []
-        print("Creating post/s...")
-        for community, account in postData["postCommunities"].items():
-            communityID = lemmy.discover_community(community)
-            post = lemmy.post.create(communityID, postData["postTitle"], url=postData["postURL"], body=postData["postBody"], nsfw=postData["postNSFW"])
-            if post:
-                print(f"Successfully posted ({post['post_view']['post']['ap_id']})")
-                links.append(post['post_view']['post']['ap_id'])
+        sleeptime = random.randint(config['Timer']['min_wait'], config['Timer']['max_wait'])
+        message += '  \nnext post in '+str(sleeptime)+' minutes'
+        try:
+            if mc_path != '':
+                subprocess.run(['matrix-commander', '-n', '-z', '-m', message, '-s', mc_path+'/store/', '-c', mc_path+'/creds.json'])
             else:
-                print("Failed to post to " + community + " using " + account)
-                success = False
-        if success:
-            os.remove(postFile)
-            message = "I posted some stuff!"
-            for link in links:
-                message += '\n'+link
-            files = str(len(fileList)-1)
-            message += '\nThere are '+files+' saved posts left.'
-            try:
-                if mc_path != '':
-                    subprocess.run(['matrix-commander', '-n', '-m', message, '-s', mc_path+'/store/', '-c', mc_path+'/creds.json'])
-                else:
-                    subprocess.run(['matrix-commander', '-n', '-m', message])
-            except Exception:
-                print('ERROR matrix-commander unavailable')
-                pass
-        else:
-            try:
-                if mc_path != '':
-                    subprocess.run(['matrix-commander', '-n', '-m', "timer posting ran but there were errors", '-s', mc_path+'/store/', '-c', mc_path+'/creds.json'])
-                else:
-                    subprocess.run(['matrix-commander', '-n', '-m', "timer posting ran but there were errors"])
-            except Exception:
-                print('ERROR matrix-commander unavailable')
-                pass
+                subprocess.run(['matrix-commander', '-n', '-z', '-m', message])
+        except Exception:
+            print('ERROR matrix-commander unavailable')
+            pass
+
+        time.sleep(sleeptime*60)
+
+        try:
+            message = "I tried posting something!  \n"+post_random_saved()
+        except Exception:
+            message = "timer posting ran but there were errors"
+        if message == "there are no saved posts":
+            message = "tried to post something, but there were no saved posts"
 
 
 timerposter = threading.Thread(target=timer_post_thread)
@@ -748,6 +815,10 @@ if __name__ == '__main__':
                     await matrix.api.send_image_message(room.room_id,image_filepath=randomThumb)
                     await matrix.api.send_markdown_message(room.room_id, '**[Select/Next/Delete]**')
 
+                elif match.command('randompost') or match.command('Randompost'):
+                    await matrix.api.send_text_message(room.room_id, 'working...', msgtype="m.notice")
+                    await matrix.api.send_markdown_message(room.room_id, post_random_saved(), msgtype="m.notice")
+
                 elif match.command('rand') or match.command('Rand') or match.command('r') or match.command('R') or match.command('next') or match.command('Next'):
                     randomFile = pick_random()
                     size = 600, 600
@@ -813,7 +884,7 @@ if __name__ == '__main__':
                             await matrix.api.send_text_message(room.room_id, '**CATBOX UPLOAD ERROR**', msgtype="m.notice")
                             botState = 'ready'
                             return
-                        files = str(len(listdir(os.path.curdir+'/scheduled')))
+                        files = str(len(listdir(os.path.curdir+'/saved')))
                         await matrix.api.send_text_message(room.room_id, 'post saved for later, '+files+' saved posts, '+postData['rateLimit']+' daily saucenao uses left', msgtype="m.notice")
                         botState = 'ready'
                     else:
@@ -839,6 +910,9 @@ if __name__ == '__main__':
                     postData['artist'] = GoogleTranslator(source='auto', target='en').translate(postData['artist'])
                     postData['postBody'] = re.sub('\*\*.*\*\*',  '**'+postData['artist']+'**', postData['postBody'] )
                     await matrix.api.send_markdown_message(room.room_id, '**Translated Artist:** '+postData['artist'])
+                elif match.command('l') or match.command('L'):
+                    postData['postBody'] = postData['postBody'].split('|')[0]+edit_links(message.body[2:])
+                    await matrix.api.send_markdown_message(room.room_id, '**Body:** '+postData['postBody'])
                 elif match.command('r') or match.command('R'):
                     postData['postNSFW'] = not postData['postNSFW']
                     if postData['postNSFW']:
@@ -861,12 +935,12 @@ if __name__ == '__main__':
                 if match.command('yes') or match.command('Yes'):
                     await matrix.api.send_text_message(room.room_id, 'saving anyway...', msgtype="m.notice")
                     post = save_posts(postData, True)
-                    files = str(len(listdir(os.path.curdir+'/scheduled')))
+                    files = str(len(listdir(os.path.curdir+'/saved')))
                     await matrix.api.send_text_message(room.room_id, 'post saved for later, '+files+' saved posts', msgtype="m.notice")
                 else:
                     await matrix.api.send_text_message(room.room_id, 'cancelled, nothing was posted or saved', msgtype="m.notice")
                 botState = 'ready'
 
-
     timerposter.start()
+    time.sleep(2)
     matrix.run()

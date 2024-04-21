@@ -6,18 +6,19 @@ Simply send it an image, a link to an image, or link to a pixiv or danbooru page
 
 ### Matrix bot usage
 
-- next/rand/r - suggest a random image to post
-- status - show information about saved posts
-- t *Title* - set a post title
-- a *Artist* - set artist name
-- tt - translate title
-- ta - translate artist
-- r - toggle post nsfw/sfw
-- c *communities* - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
-- post - post current post now
-- save - save current post for later
-- cancel - discard current post, neither posting nor saving
-- stop - stop lemmytrixposter
+- Next/Rand/R - suggest a random image to post
+- Status - show information about saved posts
+- T *Title* - set a post title
+- A *Artist* - set artist name
+- Tt - translate title
+- Ta - translate artist
+- L *links* - links separated by spaces to include in the post body
+- R - toggle post nsfw/sfw
+- C *communities* - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
+- Post - post current post now
+- Save - save current post for later
+- Cancel - discard current post, neither posting nor saving
+- Stop - stop lemmytrixposter
 
 When multiple communities are selected for a post, the bot will cross-post to them all.
 
