@@ -4,6 +4,24 @@ This is a matrix/lemmy bot for creating and saving lemmy posts. Run this as a sy
 
 Simply send it an image, a link to an image, or link to a pixiv or danbooru page to create posts. You can also configure a folder from which the bot can pick random files to post using the "next" command.
 
+### How does it work?
+
+To create post, you send the matrix bot an image file or a link to an image file. You can also send a pixiv or danbooru URL.
+
+The bot will reverse search the image using saucenao, and find the highest quality source image available.
+
+If the file is more than 1MB, the image will be thumbnailed for the post, while the full file will still be linked in the post body.
+
+A post title, artists credit, and a post body with social links will be generated, and suitable communities for the post will be pre-selected.
+
+At this point you may edit any aspect of the post, post it once satisfied, save it to post later, or discard it.
+
+Lemmytrixpster will host the image for the post on catbox.moe.
+
+Lemmytrixposter keeps track of what you have already posted, and will notify you and ask for confirmation if you go to post something a second time without remembering.
+
+Saved posts can be posted later using a command, or automatically, over time.
+
 ### Matrix bot usage
 
 - Next/Rand/R - suggest a random image to post
@@ -18,11 +36,12 @@ Simply send it an image, a link to an image, or link to a pixiv or danbooru page
 - Post - post current post now
 - Save - save current post for later
 - Cancel - discard current post, neither posting nor saving
+- Randompost - post a random saved post
 - Stop - stop lemmytrixposter
 
 When multiple communities are selected for a post, the bot will cross-post to them all.
 
-# Quick start
+## Quick start
 
 Download the compiled executable for your platform from [releases](https://github.com/CTalvio/lemmytrixposter/releases).
 
