@@ -22,6 +22,8 @@ Lemmytrixposter keeps track of what you have already posted, and will notify you
 
 Saved posts can be posted later using a command, or automatically, over time.
 
+**If you end up finding this useful, maybe throw me a buck or two:** [ko-fi](https://ko-fi.com/mentaledge)
+
 ### Matrix bot usage
 
 - Next/Rand/R - suggest a random image to post
