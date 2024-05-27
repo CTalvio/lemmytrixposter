@@ -44,10 +44,7 @@ Randompost - post a random saved post
 Stop - stop lemmytrixposter
 '''
 
-default_config = '''# Whether the tool should attempt to automatically determine suitable communities, this is done using danbooru tags
-# You can always override whatever is detected
-AutoDetectCommunities = true
-# Path to a folder from which the tool can pull random images for you to make posts from, save images here to post them later,
+default_config = '''# Path to a folder from which the tool can pull random images for you to make posts from, save images here to post them later,
 # or point it to your existing stash :D
 RandomSourcePath = "/path/to/a/folder"
 # Whether to delete the source file that was used to create a post
@@ -56,49 +53,57 @@ DeleteOncePosted = true
 # Whether to save a copy of the highest available quality file in the /posted folder for each image that is posted
 SavePosted = true
 
-# Autodetectable communities are harcoded. Feel free to open a github issue or dm me @MentalEdge@sopuli.zyx to get something added.
+# Whether the tool should attempt to automatically determine suitable communities, this is done using danbooru tags
+# You can always override whatever is detected
+AutoDetectCommunities = true
+
 # This list is used to autocomplete communites for you when their name is entered only partially.
 # This makes editing posts faster, as you don't have to type the full names of communities.
 # You can add any communities you want, and then easily post to them by writing just a few charachters of the name when using the "c" command.
-Communities = [
-  "fitmoe@lemmy.world",
-  "murdermoe@lemmy.world",
-  "fangmoe@ani.social",
-  "cybermoe@ani.social",
-  "kemonomoe@ani.social",
-  "midriffmoe@ani.social",
-  "streetmoe@ani.social",
-  "thiccmoe@ani.social",
-  "officemoe@ani.social",
-  "meganemoe@ani.social",
-  "anime_art@ani.social",
-  "sliceoflifeanime@lemmy.world",
-  "chainsawfolk@lemmy.world",
-  "helltaker@sopuli.xyz",
-  "bocchitherock@sopuli.xyz",
-  "overlord@sopuli.xyz",
-  "killlakill@lemmy.world",
-  "dungeonmeshi@ani.social",
-  "lycorisrecoil@reddthat.com",
-  "onepiece@lemmy.world",
-  "opm@lemmy.world",
-  "hatsunemiku@lemmy.world",
-  "animepics@reddthat.com",
-  "hololive@lemmy.world",
-  "gothmoe@ani.social",
-  "morphmoe@ani.social",
-  "militarymoe@ani.social",
-  "wholesomeyuri@reddthat.com",
-  "frieren@ani.social",
-  "animearmor@lemm.ee",
-  "touch_fluffy_tail@ani.social"
-]
+# You can also list danbooru tags that you would like match to certain communities to auto-select images for posting to them.
+[Communities]
+"fitmoe@lemmy.world" = ['muscular', 'toned', 'excercice']
+"murdermoe@lemmy.world" = ['yandere', 'evil_smile', 'evil_grin', 'crazy_eyes', 'blood_on_weapon']
+"fangmoe@ani.social" = ['fang', 'fangs']
+"cybermoe@ani.social" = ['cyberpunk', 'cyborg', 'science_fiction', 'mecha', 'robot', 'android']
+"kemonomoe@ani.social" = ['animal_ears']
+"midriffmoe@ani.social" = ['midriff', 'stomach']
+"streetmoe@ani.social" = ['streetwear']
+"thiccmoe@ani.social" = ['huge_breasts', 'large_breasts', 'thick_thighs', 'love_handles', 'plump', 'curvy', 'wide_hips']
+"officemoe@ani.social" = ['salaryman', 'office_lady', 'office_chair', 'office']
+"meganemoe@ani.social" = ['glasses']
+"chainsawfolk@lemmy.world" = ['chainsaw_man']
+"helltaker@sopuli.xyz" = ['helltaker']
+"bocchitherock@sopuli.xyz" = ['bocchi_the_rock!']
+"overlord@sopuli.xyz" = ['overlord_(maruyama)']
+"killlakill@lemmy.world" = ['kill_la_kill']
+"dungeonmeshi@ani.social" = ['dungeon_meshi']
+"lycorisrecoil@reddthat.com" = ['lycoris_recoil']
+"onepiece@lemmy.world" = ['one_piece']
+"opm@lemmy.world" = ['one_punch_man']
+"hatsunemiku@lemmy.world" = ['hatsune_miku']
+"hololive@lemmy.world" = ['hololive']
+"gothmoe@ani.social" = ['goth_fashion']
+"morphmoe@ani.social" = ['personification']
+"militarymoe@ani.social" = ['gun', 'military']
+"wholesomeyuri@reddthat.com" = ['yuri']
+"frieren@ani.social" = ['sousou_no_frieren', 'frieren']
+"animearmor@lemm.ee" = ['armor']
+"touch_fluffy_tail@ani.social" = ['fox_tail', 'wolf_tail', 'holding_own_tail']
+"FloatingIsFun@fedia.io" = []
+"anime_art@ani.social" = []
+"animepics@reddthat.com" = []
+"sliceoflifeanime@lemmy.world" = []
+"gameart@sopuli.xyz" = []
+"vgartwork@lemmy.zip" = []
 
 # SauceNao requires a key for API access, you can get a basic one by just making an account, the key can then be found under "api" in the account section
-SauceNaoKey = "keyyyyyyyyyyyyyyyyyyyyyyyy"
+[SauceNao]
+api_key = "keyyyyyyyyyyyyyyyyyyyyyyyy"
 
 # Pixiv access token, to get one, create an account and follow the instructions here: https://gist.github.com/ZipFile/c9ebedb224406f4f11845ab700124362
-PixivToken = "toooooooooooookeeeeeeeeeeen"
+[Pixiv]
+token = "toooooooooooookeeeeeeeeeeen"
 
 # Danbooru account and API key to access via API. You will need to create an account, then create an API key with post viewing privileges
 [Danbooru]
@@ -132,6 +137,8 @@ password = "passwooooord"
 enabled = true
 min_wait = 20
 max_wait = 240
+# Randomly post more than one post up to this burst count
+rand_burst = 1
 # Whether multi-community posts should have cross-posts created all at once, or to only
 # create one post at a time and thereby create the cross-posts over time as their own posts
 # Posts will still be cross-posts, but essentially become staggered, posted at different times
@@ -149,7 +156,7 @@ if not os.path.isfile(os.path.curdir+'/lemmytrixposter.toml'):
 config = toml.load(open(os.path.curdir+'/lemmytrixposter.toml', 'r'))
 
 # saucenao
-sauce = SauceNao(config['SauceNaoKey'])
+sauce = SauceNao(config['SauceNao']['api_key'])
 
 # danbooru
 headers = {'User-Agent': 'Danbooru user '+config['Danbooru']['username']}
@@ -177,7 +184,8 @@ def save_for_repost_check(postData):
         postedIDs.append('danbooru'+postData['danbooruID'])
     if 'pixivID' in postData:
         postedIDs.append('pixiv'+postData['pixivID'])
-    postedIDs.append('catbox'+os.path.basename(postData['postURL']))
+    if 'html' not in os.path.basename(postData['postURL']):
+        postedIDs.append('catbox'+os.path.basename(postData['postURL']))
     with open(os.path.curdir+'/posted.json', 'w') as posted:
         json.dump(postedIDs, posted)
 
@@ -230,9 +238,7 @@ def edit_communities(communities):
 def edit_links(links):
     new_links = ''
     for link in links.split():
-        if new_links != '':
-            new_links += ' '
-        new_links += '| '
+        new_links += ' | '
         if 'danbooru' in link:
             new_links += '[danbooru]'
         else:
@@ -313,7 +319,7 @@ def postdata_from_input(providedInput, tmp_path='/lemmytrixposter'):
     # pixiv
     config = toml.load(open(os.path.curdir+'/lemmytrixposter.toml', 'r'))
     pixiv = AppPixivAPI()
-    pixiv.auth(refresh_token=config['PixivToken'])
+    pixiv.auth(refresh_token=config['Pixiv']['token'])
 
     postData = {}
     postData['providedInput'] = providedInput
@@ -383,7 +389,7 @@ def postdata_from_input(providedInput, tmp_path='/lemmytrixposter'):
             for url in result.urls:
                 print('Source found: '+url)
                 if 'fanbox' not in url and re.search('pixiv|pximg', url) and 'pixivURL' not in postData:
-                    postData['pixivID'] = re.search('\d{8,9}', url).group(0)
+                    postData['pixivID'] = re.search('\d+', url.split('https')[-1]).group(0)
                     postData['pixivURL'] = 'https://www.pixiv.net/member_illust.php?mode=medium&illust_id='+postData['pixivID']
                 if 'twitter' in url and 'twitterURL' not in postData:
                     postData['twitterURL'] = url
@@ -391,7 +397,7 @@ def postdata_from_input(providedInput, tmp_path='/lemmytrixposter'):
                     postData['artstationURL'] = url
                 if 'danbooru' in url and 'danbooruURL' not in postData:
                     postData['danbooruURL'] = url
-                    postData['danbooruID'] = re.search( r'\d+', url ).group(0)
+                    postData['danbooruID'] = re.search( r'\d+', url.split('https')[-1] ).group(0)
                 if 'deviantart' in url and 'deviantURL' not in postData:
                     postData['deviantURL'] = url
             try:
@@ -492,60 +498,11 @@ def postdata_from_input(providedInput, tmp_path='/lemmytrixposter'):
 
     # Determine communities to post to
     postData['postCommunities'] = {}
-    if config['AutoDetectCommunities']:
-        try:
-            if 'sousou_no_frieren ' in danbooruTags:
-                postData['postCommunities']['frieren@ani.social'] = 'default'
-            if 'lycoris_recoil' in danbooruTags:
-                postData['postCommunities']['lycorisrecoil@reddthat.com'] = 'default'
-            if 'dungeon_meshi' in danbooruTags:
-                postData['postCommunities']['dungeonmeshi@ani.social'] = 'default'
-            if 'kill_la_kill' in danbooruTags:
-                postData['postCommunities']['killlakill@lemmy.world'] = 'default'
-            if 'overlord_(maruyama)' in danbooruTags:
-                postData['postCommunities']['overlord@sopuli.xyz'] = 'default'
-            if 'bocchi_the_rock!' in danbooruTags:
-                postData['postCommunities']['bocchitherock@sopuli.xyz'] = 'default'
-            if 'one_punch_man' in danbooruTags:
-                postData['postCommunities']['opm@lemmy.world'] = 'default'
-            if 'one_piece' in danbooruTags:
-                postData['postCommunities']['onepiece@lemmy.world'] = 'default'
-            if 'chainsaw_man' in danbooruTags:
-                postData['postCommunities']['chainsawfolk@lemmy.world'] = 'default'
-            if 'helltaker' in danbooruTags:
-                postData['postCommunities']['helltaker@sopuli.xyz'] = 'default'
-            if 'kakegurui' in danbooruTags:
-                postData['postCommunities']['kakegurui@reddthat.com'] = 'default'
-            if 'hololive' in danbooruTags:
-                postData['postCommunities']['hololive@lemmy.world'] = 'default'
-            if 'muscular' in danbooruTags or 'toned' in danbooruTags or 'excercice' in danbooruTags:
-                postData['postCommunities']['fitmoe@lemmy.world'] = 'default'
-            if 'yandere' in danbooruTags or 'evil_smile' in danbooruTags or 'evil_grin' in danbooruTags or 'crazy_eyes' in danbooruTags or 'blood_on_weapon' in danbooruTags:
-                postData['postCommunities']['murdermoe@lemmy.world'] = 'default'
-            if 'fang' in danbooruTags or 'fangs' in danbooruTags:
-                postData['postCommunities']['fangmoe@ani.social'] = 'default'
-            if 'cyberpunk' in danbooruTags or 'cyborg' in danbooruTags or 'science_fiction' in danbooruTags  or 'mecha' in danbooruTags or 'robot' in danbooruTags or 'android' in danbooruTags:
-                postData['postCommunities']['cybermoe@ani.social'] = 'default'
-            if 'animal_ears' in danbooruTags:
-                postData['postCommunities']['kemonomoe@ani.social'] = 'default'
-            if 'midriff' in danbooruTags or 'stomach' in danbooruTags :
-                postData['postCommunities']['midriffmoe@ani.social'] = 'default'
-            if 'streetwear' in danbooruTags:
-                postData['postCommunities']['streetmoe@ani.social'] = 'default'
-            if 'huge_breasts' in danbooruTags or 'large_breasts' in danbooruTags or 'thick_thighs' in danbooruTags  or 'love_handles' in danbooruTags or 'plump' in danbooruTags or 'curvy' in danbooruTags or 'wide_hips' in danbooruTags:
-                postData['postCommunities']['thiccmoe@ani.social'] = 'default'
-            if 'salaryman' in danbooruTags or 'office_lady' in danbooruTags or 'office_chair' in danbooruTags or 'office' in danbooruTags:
-                postData['postCommunities']['officemoe@ani.social'] = 'default'
-            if 'glasses' in danbooruTags:
-                postData['postCommunities']['meganemoe@ani.social'] = 'default'
-            if 'gun' in danbooruTags or 'military' in danbooruTags:
-                postData['postCommunities']['militarymoe@ani.social'] = 'default'
-            if 'goth_fashion' in danbooruTags:
-                postData['postCommunities']['gothmoe@ani.social'] = 'default'
-            if 'personification' in danbooruTags:
-                postData['postCommunities']['morphmoe@ani.social'] = 'default'
-        except Exception:
-            print('\033[1mAutomatic community detection not possible.\033[0m')
+    if config['AutoDetectCommunities'] and 'danbooruTags' in locals():
+        for community in config['Communities']:
+            for tag in config['Communities'][community]:
+                if tag in danbooruTags and community not in postData['postCommunities']:
+                    postData['postCommunities'][community] = 'default'
 
     return postData
 
@@ -567,7 +524,7 @@ def compose_preview(postData):
 
 def create_posts(postData, force = False):
     postData = upload_image(postData)
-    if '?' in postData['postURL']:
+    if '?' in postData['postURL'] or 'html' in postData['postURL']:
         return 'catbox error'
     if not force and check_repost(postData):
         return 'repost'
@@ -594,7 +551,7 @@ def create_posts(postData, force = False):
 
 def save_posts(postData, force = False):
     postData = upload_image(postData)
-    if '?' in postData['postURL']:
+    if '?' in postData['postURL'] or 'html' in postData['postURL']:
         return 'catbox error'
     if not force and check_repost(postData):
         return 'repost'
@@ -607,7 +564,7 @@ def save_posts(postData, force = False):
     if not os.path.exists(os.path.curdir+'/saved'):
         os.mkdir(os.path.curdir+'/saved')
     while True:
-        fileName = os.path.curdir+'/saved/'+ str(random.randint(100000,999999))+'post.json'
+        fileName = os.path.curdir+'/saved/' + str(random.randint(100000, 999999))+'post.json'
         if not os.path.exists(fileName):
             break
     with open(fileName, 'w') as postDict:
@@ -628,9 +585,9 @@ def post_random_saved():
     if len(fileList) == 0:
         return "there are no saved posts"
 
-    while (len(last_posted) > 5):
+    while (len(last_posted) > 6):
         last_posted.pop(0)
-    while (len(last_files) > 5):
+    while (len(last_files) > 6):
         last_files.pop(0)
 
     # Load some posts and rank them by how recently the target communities have been posted to
@@ -706,7 +663,12 @@ def post_random_saved():
     for fail in failed:
         message += 'Post to !'+community+' failed  \n'
     message += 'There are '+files+' saved posts left.'
-    return message
+    eventData = {}
+    eventData['message'] = message
+    eventData['links'] = links
+    eventData['remaining'] = files
+    eventData['failed'] = failed
+    return eventData
 
 
 def timer_post_thread():
@@ -726,12 +688,20 @@ def timer_post_thread():
             pass
 
         time.sleep(sleeptime*60)
-
+        savedPosts = len(listdir(os.path.curdir+"/saved"))
         try:
-            message = "I tried posting something!  \n"+post_random_saved()
+            message = "I tried posting something!"
+            for post in range(random.randint(1, min(savedPosts, config['Timer']['rand_burst']))):
+                eventData = post_random_saved()
+                for link in eventData['links']:
+                    message += "  \n"+link
+                for fail in eventData['failed']:
+                    message += "  \n"+'Post to !'+fail+' failed'
+                time.sleep(20)
+            message += '  \nThere are '+eventData['remaining']+' saved posts left.'
         except Exception:
             message = "timer posting ran but there were errors"
-        if message == "there are no saved posts":
+        if "no saved posts" in message:
             message = "tried to post something, but there were no saved posts"
 
 
@@ -817,7 +787,7 @@ if __name__ == '__main__':
 
                 elif match.command('randompost') or match.command('Randompost'):
                     await matrix.api.send_text_message(room.room_id, 'working...', msgtype="m.notice")
-                    await matrix.api.send_markdown_message(room.room_id, post_random_saved(), msgtype="m.notice")
+                    await matrix.api.send_markdown_message(room.room_id, post_random_saved()['message'], msgtype="m.notice")
 
                 elif match.command('rand') or match.command('Rand') or match.command('r') or match.command('R') or match.command('next') or match.command('Next'):
                     randomFile = pick_random()
@@ -861,12 +831,12 @@ if __name__ == '__main__':
                         post = create_posts(postData)
                         if post == 'repost':
                             botState = 'checking'
-                            await matrix.api.send_text_message(room.room_id, 'this is a repost, post anyway? **[Yes/No]**', msgtype="m.notice")
+                            await matrix.api.send_markdown_message(room.room_id, 'this is a repost, post anyway? **[Yes/No]**', msgtype="m.notice")
                             return
                         elif post == 'catbox error':
-                            await matrix.api.send_text_message(room.room_id, '**CATBOX UPLOAD ERROR**', msgtype="m.notice")
+                            await matrix.api.send_markdown_message(room.room_id, '**CATBOX UPLOAD ERROR**', msgtype="m.notice")
                         else:
-                            await matrix.api.send_text_message(room.room_id, post+'\n'+postData['rateLimit']+' dailysaucenao uses left', msgtype="m.notice")
+                            await matrix.api.send_markdown_message(room.room_id, post+'\n'+postData['rateLimit']+' dailysaucenao uses left', msgtype="m.notice")
                         botState = 'ready'
                     else:
                         await matrix.api.send_markdown_message(room.room_id, '**ERROR** post must have target communities before posting', msgtype="m.notice")
@@ -911,7 +881,7 @@ if __name__ == '__main__':
                     postData['postBody'] = re.sub('\*\*.*\*\*',  '**'+postData['artist']+'**', postData['postBody'] )
                     await matrix.api.send_markdown_message(room.room_id, '**Translated Artist:** '+postData['artist'])
                 elif match.command('l') or match.command('L'):
-                    postData['postBody'] = postData['postBody'].split('|')[0]+edit_links(message.body[2:])
+                    postData['postBody'] = postData['postBody'].split(' | ')[0]+edit_links(message.body[2:])
                     await matrix.api.send_markdown_message(room.room_id, '**Body:** '+postData['postBody'])
                 elif match.command('r') or match.command('R'):
                     postData['postNSFW'] = not postData['postNSFW']
