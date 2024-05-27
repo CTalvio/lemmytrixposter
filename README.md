@@ -65,6 +65,7 @@ Alternatively, you can run the tool in a python 3.10 environment. You will need:
 - pyupload
 - deep_translator
 - pillow
+- simplematrixbotlib
 
 The pip commands to install these:
 ```
