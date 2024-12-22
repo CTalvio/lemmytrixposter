@@ -10,7 +10,7 @@ The latest version is now able to maintain a database of artists, keeping track 
 
 To create a post, you start by sending the matrix bot an image file, or a link to an image file. You can also send a pixiv or danbooru URL.
 
-If you've already entered a bunch of artsists you like, or defined communities you want to post to, you can enter the "next" command to have the tool make a random suggestion based on tags/artists.
+If you've already entered a bunch of artists you like, or defined communities you want to post to, you can enter the "next" command to have the tool make a random suggestion based on tags/artists.
 
 The bot will reverse search the image using saucenao, and find the highest quality source image available.
 
