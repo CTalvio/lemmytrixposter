@@ -29,8 +29,7 @@ Saved posts can be posted later using a command, or automatically, over time.
 **If you end up finding this useful, maybe throw me a buck or two:** [ko-fi](https://ko-fi.com/mentaledge)
 
 ### Matrix bot usage
-
-- When not editing a post
+When not editing a post
 - next/N - suggest a random image to post
 - reject/R - reject current random suggestion
 - delete/D - delete current randomly suggested local file
