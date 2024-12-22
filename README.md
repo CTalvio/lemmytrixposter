@@ -38,18 +38,18 @@ Saved posts can be posted later using a command, or automatically, over time.
 - select/S - select current random suggestion
 - status - show information about saved posts
 - randompost - post a random saved post
-- add <artist_url> - add an artist to database, provide either the url of a pixiv artist page, or the first search page of an artist danbooru tag
-- update <danbooru/pixiv/social> - force a complete update of danbooru, pixiv, or artist socials (the tool keeps the db up to date incrementally, using this should never be needed)
+- add \<artist_url\> - add an artist to database, provide either the url of a pixiv artist page, or the first search page of an artist danbooru tag
+- update \<danbooru/pixiv/social\> - force a complete update of danbooru, pixiv, or artist socials (the tool keeps the db up to date incrementally, using this should never be needed)
 - stop - stop lemmytrixposter
 
 When editing a post
-- T <Title> - set a post title
-- A <Artist> - set artist name
+- T \<Title\> - set a post title
+- A \<Artist\> - set artist name
 - Tt - translate title
 - Ta - translate artist
-- L <links> - links separated by spaces to include in the post body
+- L \<links\> - links separated by spaces to include in the post body
 - R - toggle post nsfw/sfw
-- C <communities> - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
+- C \<communities\> - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
 - add - add current artist to database
 - post - post current post now
 - save - save current post for later
