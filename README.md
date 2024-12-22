@@ -4,9 +4,13 @@ This is a matrix/lemmy bot for creating and saving lemmy posts. Run this as a sy
 
 Simply send it an image, a link to an image, or link to a pixiv or danbooru page to create posts. You can also configure a folder from which the bot can pick random files to post using the "next" command.
 
+The latest version is now able to maintain a database of artists, keeping track of which of their works you've already posted, as well as new and unposted works by them.
+
 ### How does it work?
 
 To create a post, you start by sending the matrix bot an image file, or a link to an image file. You can also send a pixiv or danbooru URL.
+
+If you've already entered a bunch of artsists you like, or defined communities you want to post to, you can enter the "next" command to have the tool make a random suggestion based on tags/artists.
 
 The bot will reverse search the image using saucenao, and find the highest quality source image available.
 
@@ -26,20 +30,30 @@ Saved posts can be posted later using a command, or automatically, over time.
 
 ### Matrix bot usage
 
-- Next/Rand/R - suggest a random image to post
-- Status - show information about saved posts
-- T *Title* - set a post title
-- A *Artist* - set artist name
+- When not editing a post
+- next/N - suggest a random image to post
+- reject/R - reject current random suggestion
+- delete/D - delete current randomly suggested local file
+- move/M - move randomly suggested local file to the "moved" folder
+- select/S - select current random suggestion
+- status - show information about saved posts
+- randompost - post a random saved post
+- add <artist_url> - add an artist to database, provide either the url of a pixiv artist page, or the first search page of an artist danbooru tag
+- update <danbooru/pixiv/social> - force a complete update of danbooru, pixiv, or artist socials (the tool keeps the db up to date incrementally, using this should never be needed)
+- stop - stop lemmytrixposter
+
+When editing a post
+- T <Title> - set a post title
+- A <Artist> - set artist name
 - Tt - translate title
 - Ta - translate artist
-- L *links* - links separated by spaces to include in the post body
+- L <links> - links separated by spaces to include in the post body
 - R - toggle post nsfw/sfw
-- C *communities* - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
-- Post - post current post now
-- Save - save current post for later
-- Cancel - discard current post, neither posting nor saving
-- Randompost - post a random saved post
-- Stop - stop lemmytrixposter
+- C <communities> - communities to post to, separated by spaces, accepts partial or full community names without leading "!"
+- add - add current artist to database
+- post - post current post now
+- save - save current post for later
+- cancel - discard current post, neither posting nor saving
 
 When multiple communities are selected for a post, the bot will cross-post to them all.
 
@@ -78,7 +92,7 @@ Note that saucenao_api must have [this fix](https://github.com/nomnoms12/saucena
 
 ### Config
 
-The tool is configured by editing `lemmytrixposter.toml`. If the file is missing, run lemmytrixposter once to create it.
+The tool is configured by editing `lemmytrixposter.toml`. If the file is missing, run lemmytrixposter once to create it. Further instruction are within the file.
 
 You will need a matrix account for yourself, and another for the bot to use. Create these on any matrix instance you like.
 
